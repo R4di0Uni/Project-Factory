@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard do Carro</title>
+    <link rel="stylesheet" href="Dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Dashboard do Carro</h1>
+        
+        <div class="box speed">Velocidade: <span id="speed">0</span> km/h</div>
+        <div class="box battery">Bateria: <span id="battery">100</span>%</div>
+
+        <canvas id="performanceChart"></canvas>
+
+        <h2>Histórico de Viagens</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Tempo (s)</th>
+                    <th>Distância (m)</th>
+                    <th>Velocidade (km/h)</th>
+                </tr>
+            </thead>
+            <tbody id="historyTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let speedEl = document.getElementById("speed");
+        let batteryEl = document.getElementById("battery");
+        let historyTable = document.getElementById("historyTable");
+
+        let performanceChart = new Chart(document.getElementById("performanceChart"), {
+            type: "line",
+            data: { labels: [], datasets: [
+                { label: "Velocidade (km/h)", data: [], borderColor: "blue", fill: false },
+                { label: "Distância (m)", data: [], borderColor: "green", fill: false },
+                { label: "Tempo (s)", data: [], borderColor: "orange", fill: false }
+            ]},
+            options: { responsive: true, scales: { x: { title: { display: true, text: "Tempo" } }, y: { beginAtZero: true } } }
+        });
+
+        function updateDashboard() {
+            let newSpeed = (Math.random() * 10).toFixed(2);
+            let newDistance = (Math.random() * 2).toFixed(2);
+            let newTime = Math.floor(Math.random() * 10) + 1;
+            let newBattery = Math.max(0, parseFloat(batteryEl.innerText) - Math.random() * 0.5).toFixed(1);
+
+            speedEl.innerText = newSpeed;
+            batteryEl.innerText = newBattery;
+
+            let now = new Date().toLocaleTimeString();
+            performanceChart.data.labels.push(now);
+            performanceChart.data.datasets[0].data.push(newSpeed);
+            performanceChart.data.datasets[1].data.push(newDistance);
+            performanceChart.data.datasets[2].data.push(newTime);
+            if (performanceChart.data.labels.length > 10) {
+                performanceChart.data.labels.shift();
+                performanceChart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+            performanceChart.update();
+
+            let newRow = `<tr><td>${now}</td><td>${newTime}</td><td>${newDistance}</td><td>${newSpeed}</td></tr>`;
+            historyTable.innerHTML = (historyTable.innerHTML + newRow).split("</tr>").slice(-10).join("</tr>");
+        }
+
+        setInterval(updateDashboard, 2000);
+    </script>
+
+</body>
+</html>
