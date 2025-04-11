@@ -3,7 +3,7 @@
 
 const char* ssid = "your_wifi_ssid";
 const char* password = "your_wifi_password";
-const char* mqtt_server = "test.mosquitto.org";  // Change if using another broker
+const char* mqtt_server = "test.mosquitto.org"; 
 
 WiFiClient espClient;
 PubSubClient client(espClient);
