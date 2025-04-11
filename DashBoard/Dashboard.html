@@ -1,77 +1,169 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard do Carro</title>
-    <link rel="stylesheet" href="Dashboard.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard do Carro</title>
+  <link rel="stylesheet" href="Dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="bg-gray-200">
 
     <div class="container">
-        <h1>Dashboard do Carro</h1>
-        
-        <div class="box speed">Velocidade: <span id="speed">0</span> km/h</div>
-        <div class="box battery">Bateria: <span id="battery">100</span>%</div>
+      <h1 class="text-3xl font-bold text-center mb-5">Dashboard do Carro</h1>
+  
 
-        <canvas id="performanceChart"></canvas>
-
-        <h2>Histórico de Viagens</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Tempo (s)</th>
-                    <th>Distância (m)</th>
-                    <th>Velocidade (km/h)</th>
-                </tr>
-            </thead>
-            <tbody id="historyTable"></tbody>
-        </table>
+    <!-- Velocidade / Bateria / Alertas -->
+    <div class="status-boxes">
+      <div class="box velocidade">
+        <h2>Velocidade</h2>
+        <p id="speed">0 km/h</p>
+      </div>
+      <div class="box bateria">
+        <h2>Bateria</h2>
+        <p id="battery">100%</p>
+      </div>
+      <div class="box alertas">
+        <h2>Alertas</h2>
+        <p id="alerts">Nenhum alerta</p>
+      </div>
     </div>
 
-    <script>
-        let speedEl = document.getElementById("speed");
-        let batteryEl = document.getElementById("battery");
-        let historyTable = document.getElementById("historyTable");
+    <!-- Botões -->
+    <div class="botoes">
+      <button id="start-btn" onclick="startTravel()">Iniciar Viagem</button>
+      <button id="stop-btn" onclick="stopTravel()" disabled>Finalizar Viagem</button>
+    </div>
 
-        let performanceChart = new Chart(document.getElementById("performanceChart"), {
-            type: "line",
-            data: { labels: [], datasets: [
-                { label: "Velocidade (km/h)", data: [], borderColor: "blue", fill: false },
-                { label: "Distância (m)", data: [], borderColor: "green", fill: false },
-                { label: "Tempo (s)", data: [], borderColor: "orange", fill: false }
-            ]},
-            options: { responsive: true, scales: { x: { title: { display: true, text: "Tempo" } }, y: { beginAtZero: true } } }
+    <!-- Gráfico -->
+    <div class="grafico">
+      <h2>Desempenho da Viagem</h2>
+      <canvas id="chart" width="400" height="200"></canvas>
+    </div>
+
+    <!-- Histórico -->
+    <div class="historico">
+      <h2>Histórico de Viagens</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Tempo (s)</th>
+            <th>Distância (m)</th>
+            <th>Velocidade (km/h)</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <!-- Entradas da viagem -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let data = [];
+    let isTraveling = false;
+    let travelInterval;
+    let chart;
+    let startTime;
+
+    function startTravel() {
+      if (isTraveling) return;
+
+      isTraveling = true;
+      data = [];
+      document.getElementById("start-btn").disabled = true;
+      document.getElementById("stop-btn").disabled = false;
+      startTime = new Date();
+      let secondsPassed = 0;
+
+      travelInterval = setInterval(() => {
+        let speed = (Math.random() * 10 + 20).toFixed(2);
+        let distance = (Math.random() * 2).toFixed(2);
+
+        data.push({
+          time: secondsPassed,
+          speed: parseFloat(speed),
+          distance: parseFloat(distance),
         });
 
-        function updateDashboard() {
-            let newSpeed = (Math.random() * 10).toFixed(2);
-            let newDistance = (Math.random() * 2).toFixed(2);
-            let newTime = Math.floor(Math.random() * 10) + 1;
-            let newBattery = Math.max(0, parseFloat(batteryEl.innerText) - Math.random() * 0.5).toFixed(1);
+        document.getElementById("speed").innerText = `${speed} km/h`;
+        document.getElementById("battery").innerText = `${(100 - secondsPassed * 0.5).toFixed(1)}%`;
 
-            speedEl.innerText = newSpeed;
-            batteryEl.innerText = newBattery;
+        updateChart();
+        secondsPassed += 2;
+      }, 2000);
+    }
 
-            let now = new Date().toLocaleTimeString();
-            performanceChart.data.labels.push(now);
-            performanceChart.data.datasets[0].data.push(newSpeed);
-            performanceChart.data.datasets[1].data.push(newDistance);
-            performanceChart.data.datasets[2].data.push(newTime);
-            if (performanceChart.data.labels.length > 10) {
-                performanceChart.data.labels.shift();
-                performanceChart.data.datasets.forEach(dataset => dataset.data.shift());
-            }
-            performanceChart.update();
+    function stopTravel() {
+      if (!isTraveling) return;
 
-            let newRow = `<tr><td>${now}</td><td>${newTime}</td><td>${newDistance}</td><td>${newSpeed}</td></tr>`;
-            historyTable.innerHTML = (historyTable.innerHTML + newRow).split("</tr>").slice(-10).join("</tr>");
-        }
+      clearInterval(travelInterval);
+      isTraveling = false;
 
-        setInterval(updateDashboard, 2000);
-    </script>
+      document.getElementById("start-btn").disabled = false;
+      document.getElementById("stop-btn").disabled = true;
+
+      if (data.length > 0) {
+        addToHistory();
+        resetChart();
+      }
+    }
+
+    function updateChart() {
+      if (!chart) {
+        chart = new Chart(document.getElementById("chart"), {
+          type: "line",
+          data: {
+            labels: data.map(point => point.time + "s"),
+            datasets: [
+              {
+                label: "Velocidade (km/h)",
+                data: data.map(point => point.speed),
+                borderColor: "blue",
+                fill: false,
+              },
+              {
+                label: "Distância (m)",
+                data: data.map(point => point.distance),
+                borderColor: "green",
+                fill: false,
+              }
+            ]
+          }
+        });
+      } else {
+        chart.data.labels = data.map(point => point.time + "s");
+        chart.data.datasets[0].data = data.map(point => point.speed);
+        chart.data.datasets[1].data = data.map(point => point.distance);
+        chart.update();
+      }
+    }
+
+    function addToHistory() {
+      let historyTable = document.getElementById("history-body");
+
+      let avgSpeed = (data.reduce((sum, point) => sum + point.speed, 0) / data.length).toFixed(2);
+      let totalDistance = data.reduce((sum, point) => sum + point.distance, 0).toFixed(2);
+      let totalTime = data[data.length - 1].time;
+
+      let newRow = document.createElement("tr");
+      newRow.innerHTML = `
+        <td>${new Date().toLocaleString()}</td>
+        <td>${totalTime} s</td>
+        <td>${totalDistance} m</td>
+        <td>${avgSpeed} km/h</td>
+      `;
+      historyTable.appendChild(newRow);
+    }
+
+    function resetChart() {
+      if (chart) {
+        chart.destroy();
+        chart = null;
+      }
+    }
+  </script>
 
 </body>
 </html>
