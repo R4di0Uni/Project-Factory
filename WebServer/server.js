@@ -5,7 +5,7 @@ const app = express();
 const PORT = 3000;
 
 // MQTT Broker Connection
-const brokerUrl = "mqtt://test.mosquitto.org"; // Change to your broker URL if needed
+const brokerUrl = "mqtt://localhost";
 const mqttClient = mqtt.connect(brokerUrl);
 
 mqttClient.on("connect", () => {
