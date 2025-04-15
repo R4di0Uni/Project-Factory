@@ -6,6 +6,25 @@
   <title>Dashboard do Carro</title>
   <link rel="stylesheet" href="Dashboard.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    function sendDirection(direction) {
+      fetch('http://localhost:3000/move', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ direction }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data.message);
+      })
+      .catch(error => {
+        console.error("Erro ao enviar comando:", error);
+      });
+    }
+  </script>
+  
 </head>
 <body class="bg-gray-200">
 
@@ -34,6 +53,20 @@
       <button id="start-btn" onclick="startTravel()">Iniciar Viagem</button>
       <button id="stop-btn" onclick="stopTravel()" disabled>Finalizar Viagem</button>
     </div>
+
+    <!-- Controle do Carro -->
+<div class="pad-section">
+  <h2>Controle do Carro</h2>
+  <div class="pad">
+    <button onclick="sendDirection('up')" class="pad-btn up">↑</button>
+    <div class="pad-row">
+      <button onclick="sendDirection('left')" class="pad-btn left">←</button>
+      <button onclick="sendDirection('down')" class="pad-btn down">↓</button>
+      <button onclick="sendDirection('right')" class="pad-btn right">→</button>
+    </div>
+  </div>
+</div>
+
 
     <!-- Gráfico -->
     <div class="grafico">

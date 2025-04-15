@@ -1,8 +1,12 @@
 const express = require("express");
+const cors = require("cors");
 const mqtt = require("mqtt");
 
 const app = express();
 const PORT = 3000;
+
+// Enable CORS for all routes
+app.use(cors());
 
 // MQTT Broker Connection
 const brokerUrl = "mqtt://localhost";
