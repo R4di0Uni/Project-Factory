@@ -1,9 +1,6 @@
   #include <WiFi.h>
   #include <PubSubClient.h>
-
-  const char* ssid = "your_wifi_ssid";
-  const char* password = "your_wifi_password";
-  const char* mqtt_server = "test.mosquitto.org";  // Change if using another broker
+  #include "secrets.h"
 
   WiFiClient espClient;
   PubSubClient client(espClient);
