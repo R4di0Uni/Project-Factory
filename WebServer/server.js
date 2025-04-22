@@ -1,24 +1,25 @@
 const express = require("express");
+const cors = require("cors");
 const mqtt = require("mqtt");
 
 const app = express();
 const PORT = 3000;
 
+// Enable CORS for all routes
+app.use(cors());
+
 // MQTT Broker Connection
-const brokerUrl = "mqtt://test.mosquitto.org"; // Change to your broker URL if needed
+const brokerUrl = "mqtt://localhost";
 const mqttClient = mqtt.connect(brokerUrl);
 
 mqttClient.on("connect", () => {
   console.log("Connected to MQTT broker");
 });
 
-// Middleware for parsing JSON requests
 app.use(express.json());
 
-// MQTT topic for ESP32
 const topic = "esp32/car/move";
 
-// API Endpoint to send movement commands
 app.post("/move", (req, res) => {
   const { direction } = req.body;
 
