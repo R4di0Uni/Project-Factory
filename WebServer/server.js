@@ -9,7 +9,7 @@ const PORT = 3000;
 app.use(cors());
 
 // MQTT Broker Connection
-const brokerUrl = "mqtt://localhost";
+const brokerUrl = "mqtt://192.168.234.177";
 const mqttClient = mqtt.connect(brokerUrl);
 
 mqttClient.on("connect", () => {
@@ -23,7 +23,7 @@ const topic = "esp32/car/move";
 app.post("/move", (req, res) => {
   const { direction } = req.body;
 
-  if (!["up", "down", "left", "right"].includes(direction)) {
+  if (!["up", "down", "left", "right", "stop"].includes(direction)) {
     return res.status(400).json({ error: "Invalid direction" });
   }
 
@@ -32,6 +32,7 @@ app.post("/move", (req, res) => {
     res.json({ message: `Command '${direction}' sent` });
   });
 });
+
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

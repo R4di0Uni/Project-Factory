@@ -1,98 +1,170 @@
-  #include <WiFi.h>
-  #include <PubSubClient.h>
-  #include "secrets.h"
+#include <WiFi.h>
+#include <PubSubClient.h>
 
-  WiFiClient espClient;
-  PubSubClient client(espClient);
+// Configurações WiFi e MQTT
+const char* ssid = "Redmi 14C";
+const char* password = "onepiece";
+const char* mqtt_server = "192.168.234.177";
 
-  const int motor1A = 5;
-  const int motor1B = 18;
-  const int motor2A = 19;
-  const int motor2B = 21;
+WiFiClient espClient;
+PubSubClient client(espClient);
 
-  void setup() {
-    Serial.begin(115200);
-    WiFi.begin(ssid, password);
-    
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
+const int motorLeftA = 5;
+const int motorLeftB = 18;
+const int motorRightA = 19;
+const int motorRightB = 21;
+
+const int enaPin = 23;
+const int enbPin = 22;
+
+void moveForward();
+void moveBackward();
+void turnLeft();
+void turnRight();
+void stopMotors();
+
+void callback(char* topic, byte* payload, unsigned int length);
+
+void setup() {
+  Serial.begin(115200);
+  
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi connected");
+
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    if (client.connect("ESP32CarClient123", NULL, NULL, NULL, 0, false, NULL, 120)) {
+      Serial.println("connected to MQTT broker!");
+      if (client.subscribe("esp32/car/move")) {
+        Serial.println("Subscribed to esp32/car/move");
+      } else {
+        Serial.println("Failed to subscribe");
+      }
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 1 second");
+      delay(1000);
     }
-    Serial.println("\nWiFi connected");
+  }
 
-    client.setServer(mqtt_server, 1883);
-    client.setCallback(callback);
+  pinMode(motorLeftA, OUTPUT);
+  pinMode(motorLeftB, OUTPUT);
+  pinMode(motorRightA, OUTPUT);
+  pinMode(motorRightB, OUTPUT);
+  pinMode(enaPin, OUTPUT);
+  pinMode(enbPin, OUTPUT);
 
+
+  ledcAttach(enaPin, 5000, 8);  // 5kHz, 8-bit PWM no pino 23
+  ledcAttach(enbPin, 5000, 8);  // 5kHz, 8-bit PWM no pino 22
+
+  ledcWrite(enaPin, 255); // 100% duty cycle (motor A ligado)
+  ledcWrite(enbPin, 255); // 100% duty cycle (motor B ligado)
+
+}
+
+
+
+ 
+
+
+void loop() {
+  if (!client.connected()) {
+    Serial.println("MQTT disconnected, trying to reconnect...");
     while (!client.connected()) {
-      if (client.connect("ESP32Car")) {
+      Serial.print("Attempting MQTT connection...");
+      if (client.connect("ESP32CarClient123", NULL, NULL, NULL, 0, false, NULL, 120)) {
+        Serial.println("MQTT reconnected");
         client.subscribe("esp32/car/move");
       } else {
+        Serial.print("MQTT connection failed, rc=");
+        Serial.println(client.state());
         delay(1000);
       }
     }
-
-    pinMode(motor1A, OUTPUT);
-    pinMode(motor1B, OUTPUT);
-    pinMode(motor2A, OUTPUT);
-    pinMode(motor2B, OUTPUT);
   }
+  client.loop();
+}
 
-  void callback(char* topic, byte* payload, unsigned int length) {
-    String command = "";
-    for (int i = 0; i < length; i++) {
-      command += (char)payload[i];
-    }
-    
-    Serial.println("Command Received: " + command);
 
-    if (command == "up") {
-      moveForward();
-    } else if (command == "down") {
-      moveBackward();
-    } else if (command == "left") {
-      turnLeft();
-    } else if (command == "right") {
-      turnRight();
-    } else {
-      stopMotors();
-    }
+
+
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.println("Callback triggered");
+  Serial.print("Topic: ");
+  Serial.println(topic);
+
+  Serial.print("Payload bytes: ");
+  for (unsigned int i = 0; i < length; i++) {
+    Serial.print(payload[i], HEX);
+    Serial.print(" ");
   }
+  Serial.println();
 
-  void moveForward() {
-    digitalWrite(motor1A, HIGH);
-    digitalWrite(motor1B, LOW);
-    digitalWrite(motor2A, HIGH);
-    digitalWrite(motor2B, LOW);
+  String command = "";
+  for (unsigned int i = 0; i < length; i++) {
+    command += (char)payload[i];
   }
+  Serial.println("Command Received: " + command);
 
-  void moveBackward() {
-    digitalWrite(motor1A, LOW);
-    digitalWrite(motor1B, HIGH);
-    digitalWrite(motor2A, LOW);
-    digitalWrite(motor2B, HIGH);
-  }
+  if (command == "up") {
+  moveForward();
+} else if (command == "down") {
+  moveBackward();
+} else if (command == "left") {
+  turnLeft();
+} else if (command == "right") {
+  turnRight();
+} else if (command == "stop") {
+  stopMotors();
+}
 
-  void turnLeft() {
-    digitalWrite(motor1A, LOW);
-    digitalWrite(motor1B, HIGH);
-    digitalWrite(motor2A, HIGH);
-    digitalWrite(motor2B, LOW);
-  }
+}
 
-  void turnRight() {
-    digitalWrite(motor1A, HIGH);
-    digitalWrite(motor1B, LOW);
-    digitalWrite(motor2A, LOW);
-    digitalWrite(motor2B, HIGH);
-  }
 
-  void stopMotors() {
-    digitalWrite(motor1A, LOW);
-    digitalWrite(motor1B, LOW);
-    digitalWrite(motor2A, LOW);
-    digitalWrite(motor2B, LOW);
-  }
+void moveForward() {
+  digitalWrite(motorLeftA, LOW);    // Esquerdo para trás
+  digitalWrite(motorLeftB, HIGH);
+  digitalWrite(motorRightA, LOW);   // Direito para trás
+  digitalWrite(motorRightB, HIGH);
+}
 
-  void loop() {
-    client.loop();
-  }
+void moveBackward() {
+  digitalWrite(motorLeftA, HIGH);   // Esquerdo para frente
+  digitalWrite(motorLeftB, LOW);
+  digitalWrite(motorRightA, HIGH); // Direito para frente
+  digitalWrite(motorRightB, LOW);
+  
+}
+
+void turnLeft() {
+  digitalWrite(motorLeftA, LOW);    // Esquerdo para trás
+  digitalWrite(motorLeftB, HIGH);
+  digitalWrite(motorRightA, HIGH);  // Direito para frente
+  digitalWrite(motorRightB, LOW);
+}
+
+void turnRight() {
+  digitalWrite(motorLeftA, HIGH);   // Esquerdo para frente
+  digitalWrite(motorLeftB, LOW);
+  digitalWrite(motorRightA, LOW);   // Direito para trás
+  digitalWrite(motorRightB, HIGH);
+}
+
+
+
+void stopMotors() {
+  digitalWrite(motorLeftA, LOW);
+  digitalWrite(motorLeftB, LOW);
+  digitalWrite(motorRightA, LOW);
+  digitalWrite(motorRightB, LOW);
+}

@@ -133,3 +133,13 @@ th {
 .pad-btn:hover {
   background-color: #357ABD;
 }
+
+
+.pad-btn.stop {
+  background-color: #dc2626; /* vermelho */
+  color: white;
+  font-weight: bold;
+  padding: 10px 20px;
+  margin-top: 10px;
+  border-radius: 8px;
+}

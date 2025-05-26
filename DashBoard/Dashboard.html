@@ -54,8 +54,7 @@
       <button id="stop-btn" onclick="stopTravel()" disabled>Finalizar Viagem</button>
     </div>
 
-    <!-- Controle do Carro -->
-<div class="pad-section">
+  <div class="pad-section">
   <h2>Controle do Carro</h2>
   <div class="pad">
     <button onclick="sendDirection('up')" class="pad-btn up">↑</button>
@@ -64,8 +63,12 @@
       <button onclick="sendDirection('down')" class="pad-btn down">↓</button>
       <button onclick="sendDirection('right')" class="pad-btn right">→</button>
     </div>
+    <button onclick="sendDirection('stop')" class="pad-btn stop">■ Parar</button>
   </div>
 </div>
+
+
+
 
 
     <!-- Gráfico -->
@@ -197,6 +200,31 @@
       }
     }
   </script>
+
+<script>
+  document.addEventListener('keydown', function(event) {
+    const key = event.key.toLowerCase();
+    switch (key) {
+      case 'w':
+        sendDirection('up');
+        break;
+      case 'a':
+        sendDirection('left');
+        break;
+      case 's':
+        sendDirection('down');
+        break;
+      case 'd':
+        sendDirection('right');
+        break;
+      case 'x': // alterado de 'e' para 'x'
+        sendDirection('stop');
+        break;
+    }
+  });
+</script>
+
+
 
 </body>
 </html>
