@@ -14,7 +14,7 @@ veiculo.ino: código embarcado que roda no ESP32, conecta-se ao broker MQTT, e c
 
 Interface web (HTML/JS): envia comandos para o servidor via requisições HTTP.
 
-Requisitos
+## Requisitos
 Node.js e npm instalados
 
 Docker e Docker Compose instalados
@@ -25,7 +25,7 @@ Placa ESP32
 
 Rede local comum entre ESP32, computador e broker MQTT
 
-Instalação e Execução
+## Instalação e Execução
 1. Clonar o repositório
 
 git clone <url-do-repositorio>
