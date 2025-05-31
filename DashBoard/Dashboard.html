@@ -24,6 +24,50 @@
       });
     }
   </script>
+
+  <script>
+  async function fetchDistanceHistory() {
+    const res = await fetch('http://localhost:3000/distancias');
+    const history = await res.json();
+
+    const tbody = document.getElementById("history-body");
+    tbody.innerHTML = "";
+
+    history.forEach(entry => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${new Date(entry.timestamp).toLocaleString()}</td>
+        <td>-</td>
+        <td>${entry.distance.toFixed(2)} cm</td>
+        <td>-</td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  // Carrega o histórico ao abrir a página
+  document.addEventListener("DOMContentLoaded", fetchDistanceHistory);
+</script>
+
+<script>
+  async function fetchCurrentDistance() {
+    try {
+      const res = await fetch("http://localhost:3000/distancias");
+      const data = await res.json();
+      if (data.length > 0) {
+        const latest = data[0];
+        document.getElementById("distance-value").innerText = `${latest.distance.toFixed(2)} cm`;
+      }
+    } catch (err) {
+      console.error("Erro ao buscar distância:", err);
+    }
+  }
+
+  // Atualiza a cada 2 segundos
+  setInterval(fetchCurrentDistance, 2000);
+</script>
+
+
   
 </head>
 <body class="bg-gray-200">
@@ -38,14 +82,16 @@
         <h2>Velocidade</h2>
         <p id="speed">0 km/h</p>
       </div>
+      <div class="box distancia">
+    <h2>Distância</h2>
+        <p id="distance-value">-- cm</p>
+    </div>
+
       <div class="box bateria">
         <h2>Bateria</h2>
         <p id="battery">100%</p>
       </div>
-      <div class="box alertas">
-        <h2>Alertas</h2>
-        <p id="alerts">Nenhum alerta</p>
-      </div>
+      
     </div>
 
     <!-- Botões -->
@@ -63,7 +109,7 @@
       <button onclick="sendDirection('down')" class="pad-btn down">↓</button>
       <button onclick="sendDirection('right')" class="pad-btn right">→</button>
     </div>
-    <button onclick="sendDirection('stop')" class="pad-btn stop">■ Parar</button>
+    <button onclick="sendDirection('stop')" class="pad-btn stop">■ </button>
   </div>
 </div>
 
@@ -76,6 +122,13 @@
       <h2>Desempenho da Viagem</h2>
       <canvas id="chart" width="400" height="200"></canvas>
     </div>
+
+
+    <div class="box distancia">
+  <h2>Distância</h2>
+  <p id="distance-value">-- cm</p>
+</div>
+
 
     <!-- Histórico -->
     <div class="historico">

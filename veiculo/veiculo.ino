@@ -17,6 +17,10 @@ const int motorRightB = 21;
 const int enaPin = 23;
 const int enbPin = 22;
 
+const int trigPin = 27;
+const int echoPin = 14;
+
+
 void moveForward();
 void moveBackward();
 void turnLeft();
@@ -61,6 +65,9 @@ void setup() {
   pinMode(motorRightB, OUTPUT);
   pinMode(enaPin, OUTPUT);
   pinMode(enbPin, OUTPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
 
 
   ledcAttach(enaPin, 5000, 8);  // 5kHz, 8-bit PWM no pino 23
@@ -92,6 +99,20 @@ void loop() {
     }
   }
   client.loop();
+
+  digitalWrite(trigPin, LOW); delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH); delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  long duration = pulseIn(echoPin, HIGH);
+  float distance = duration * 0.034 / 2.0;
+
+  // Publicar no MQTT
+  char msg[10];
+  dtostrf(distance, 1, 2, msg);
+  client.publish("esp32/ultrasonic", msg);
+
+  delay(2000); // Enviar a cada 2s
 }
 
 
