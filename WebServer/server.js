@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mqtt = require("mqtt");
-const mongoose = require("mongoose");
+const { Sequelize, DataTypes } = require("sequelize");
 
 const app = express();
 const PORT = 3000;
@@ -19,16 +19,37 @@ mqttClient.on("connect", () => {
   mqttClient.subscribe("esp32/ultrasonic");
 });
 
-// Conexão com MongoDB
-mongoose.connect("mongodb://localhost:27017/carros", {
-  
+// Conexão com MySQL (ajuste host conforme necessário)
+const sequelize = new Sequelize("carros", "user", "userpass", {
+  host: "localhost", // use "mysql" se estiver em container Docker separado
+  dialect: "mysql",
 });
 
-const distanciaSchema = new mongoose.Schema({
-  distance: Number,
-  timestamp: Date,
+// Definição do modelo
+const Distancia = sequelize.define("Distancia", {
+  distance: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  timestamp: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
+}, {
+  tableName: "distancias",
+  timestamps: false,
 });
-const Distancia = mongoose.model("Distancia", distanciaSchema);
+
+// Testar conexão e sincronizar tabela
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("Conexão com MySQL estabelecida.");
+    await Distancia.sync(); // Cria a tabela se não existir
+  } catch (err) {
+    console.error("Erro ao conectar ao MySQL:", err);
+  }
+})();
 
 // Recebe dados do sensor via MQTT
 mqttClient.on("message", async (topic, message) => {
@@ -37,9 +58,13 @@ mqttClient.on("message", async (topic, message) => {
     const timestamp = new Date();
 
     distanceData.push({ timestamp, distance });
-    await Distancia.create({ distance, timestamp });
 
-    console.log(`Distância recebida e salva: ${distance} cm`);
+    try {
+      await Distancia.create({ distance, timestamp });
+      console.log(`Distância recebida e salva: ${distance} cm`);
+    } catch (err) {
+      console.error("Erro ao salvar no MySQL:", err);
+    }
   }
 });
 
@@ -59,8 +84,15 @@ app.post("/move", (req, res) => {
 
 // API para buscar histórico de distâncias
 app.get("/distancias", async (req, res) => {
-  const dados = await Distancia.find().sort({ timestamp: -1 }).limit(10);
-  res.json(dados);
+  try {
+    const dados = await Distancia.findAll({
+      order: [["timestamp", "DESC"]],
+      limit: 10,
+    });
+    res.json(dados);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao buscar dados" });
+  }
 });
 
 app.listen(PORT, () => {
