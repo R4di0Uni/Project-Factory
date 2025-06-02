@@ -6,24 +6,7 @@
   <title>Dashboard do Carro</title>
   <link rel="stylesheet" href="Dashboard.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    function sendDirection(direction) {
-      fetch('http://localhost:3000/move', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ direction }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log(data.message);
-      })
-      .catch(error => {
-        console.error("Erro ao enviar comando:", error);
-      });
-    }
-  </script>
+  
 
   <script>
   async function fetchDistanceHistory() {
@@ -124,11 +107,7 @@
     </div>
 
 
-    <div class="box distancia">
-  <h2>Distância</h2>
-  <p id="distance-value">-- cm</p>
-</div>
-
+   
 
     <!-- Histórico -->
     <div class="historico">
@@ -255,27 +234,72 @@
   </script>
 
 <script>
+  let isMoving = false;
+
+  // Detecta quando uma tecla é pressionada
   document.addEventListener('keydown', function(event) {
     const key = event.key.toLowerCase();
     switch (key) {
-      case 'w':
-        sendDirection('up');
+      case 'w': // Move para frente
+        if (!isMoving) {
+          sendDirection('up');
+          isMoving = true;
+        }
         break;
-      case 'a':
-        sendDirection('left');
+      case 'a': // Move para a esquerda
+        if (!isMoving) {
+          sendDirection('left');
+          isMoving = true;
+        }
         break;
-      case 's':
-        sendDirection('down');
+      case 's': // Move para trás
+        if (!isMoving) {
+          sendDirection('down');
+          isMoving = true;
+        }
         break;
-      case 'd':
-        sendDirection('right');
-        break;
-      case 'x': // alterado de 'e' para 'x'
-        sendDirection('stop');
+      case 'd': // Move para a direita
+        if (!isMoving) {
+          sendDirection('right');
+          isMoving = true;
+        }
         break;
     }
   });
+
+  // Detecta quando uma tecla é liberada
+  document.addEventListener('keyup', function(event) {
+    const key = event.key.toLowerCase();
+    switch (key) {
+      case 'w': // Para o movimento para frente
+      case 'a': // Para o movimento para a esquerda
+      case 's': // Para o movimento para trás
+      case 'd': // Para o movimento para a direita
+        sendDirection('stop');
+        isMoving = false;
+        break;
+    }
+  });
+
+  // Função para enviar o comando de direção ao backend
+  function sendDirection(direction) {
+    fetch('http://localhost:3000/move', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ direction })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data.message);
+    })
+    .catch(error => {
+      console.error("Erro ao enviar comando:", error);
+    });
+  }
 </script>
+
 
 
 

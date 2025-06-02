@@ -21,9 +21,13 @@ mqttClient.on("connect", () => {
 
 // Conexão com MySQL (ajuste host conforme necessário)
 const sequelize = new Sequelize("carros", "user", "userpass", {
-  host: "localhost", // use "mysql" se estiver em container Docker separado
+  host: "127.0.0.1",
+  port: 3307,
   dialect: "mysql",
+  logging: false, // <--- Desativa os logs SQL
 });
+
+
 
 // Definição do modelo
 const Distancia = sequelize.define("Distancia", {

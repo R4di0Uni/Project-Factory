@@ -121,16 +121,6 @@ void loop() {
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println("Callback triggered");
-  Serial.print("Topic: ");
-  Serial.println(topic);
-
-  Serial.print("Payload bytes: ");
-  for (unsigned int i = 0; i < length; i++) {
-    Serial.print(payload[i], HEX);
-    Serial.print(" ");
-  }
-  Serial.println();
-
   String command = "";
   for (unsigned int i = 0; i < length; i++) {
     command += (char)payload[i];
@@ -138,18 +128,18 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println("Command Received: " + command);
 
   if (command == "up") {
-  moveForward();
-} else if (command == "down") {
-  moveBackward();
-} else if (command == "left") {
-  turnLeft();
-} else if (command == "right") {
-  turnRight();
-} else if (command == "stop") {
-  stopMotors();
+    moveForward();
+  } else if (command == "down") {
+    moveBackward();
+  } else if (command == "left") {
+    turnLeft();
+  } else if (command == "right") {
+    turnRight();
+  } else if (command == "stop") {
+    stopMotors();
+  }
 }
 
-}
 
 
 void moveForward() {
