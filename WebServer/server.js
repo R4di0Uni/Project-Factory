@@ -86,6 +86,17 @@ app.post("/move", (req, res) => {
   });
 });
 
+
+app.post('/speed', (req, res) => {
+  const { speed } = req.body;
+  const constrainedSpeed = Math.min(Math.max(speed, 0), 255);
+  const message = `speed:${constrainedSpeed}`;
+  mqttClient.publish('esp32/car/move', message); // <-- PUBLICA no MQTT com formato correto
+  res.json({ message: `Velocidade enviada: ${constrainedSpeed}` });
+});
+
+
+
 // API para buscar histórico de distâncias
 app.get("/distancias", async (req, res) => {
   try {

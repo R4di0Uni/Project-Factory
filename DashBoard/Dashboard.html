@@ -96,6 +96,14 @@
   </div>
 </div>
 
+<div class="box velocidade">
+  <h2>Velocidade</h2>
+  <input type="range" min="0" max="255" value="255" id="speed-slider" oninput="updateSpeed(this.value)">
+  <p id="speed-display">255</p>
+</div>
+
+
+
 
 
 
@@ -299,6 +307,24 @@
     });
   }
 </script>
+
+<script>
+  function updateSpeed(value) {
+    document.getElementById("speed-display").innerText = value;
+
+    fetch("http://localhost:3000/speed", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ speed: parseInt(value) })
+    })
+    .then(res => res.json())
+    .then(data => console.log(data.message))
+    .catch(err => console.error("Erro ao enviar velocidade:", err));
+  }
+</script>
+
 
 
 
